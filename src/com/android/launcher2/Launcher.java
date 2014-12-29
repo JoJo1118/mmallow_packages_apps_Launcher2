@@ -114,6 +114,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import java.lang.reflect.Method;
+
 /**
  * Default launcher application.
  */
@@ -3849,6 +3851,18 @@ public final class Launcher extends Activity
         }
     }
 
+    private int getRotationFromSystem() {
+        int rotation = 0;
+        try {
+            Class<?> c = Class.forName("android.os.SystemProperties");
+            Method getInt = c.getMethod("getInt", new Class[] { String.class, int.class});
+            rotation = (int)(getInt.invoke(c, "ro.display.rotation", 0));
+        } catch (Exception e){
+            rotation = 0;
+        }
+        return rotation;
+    }
+
     private int mapConfigurationOriActivityInfoOri(int configOri) {
         final Display d = getWindowManager().getDefaultDisplay();
         int naturalOri = Configuration.ORIENTATION_LANDSCAPE;
@@ -3866,12 +3880,23 @@ public final class Launcher extends Activity
             break;
         }
 
-        int[] oriMap = {
-                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT,
-                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE,
-                ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT,
-                ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
-        };
+        int []oriMap = new int[4];
+        int rotation = getRotationFromSystem();
+
+        if (rotation == 0 || rotation == 90) {
+            oriMap[0] = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+            oriMap[1] = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+            oriMap[2] = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
+            oriMap[3] = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+        }
+
+        if (rotation == 180 || rotation == 270) {
+            oriMap[0] = ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
+            oriMap[1] = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+            oriMap[2] = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+            oriMap[3] = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+        }
+
         // Since the map starts at portrait, we need to offset if this device's natural orientation
         // is landscape.
         int indexOffset = 0;
