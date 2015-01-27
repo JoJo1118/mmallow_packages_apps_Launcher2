@@ -3949,11 +3949,26 @@ public final class Launcher extends Activity
             }
         }
         // Check if the system has requested skipping of first-use hints.
-        if (Settings.Secure.getInt(getContentResolver(),
+        if (isBox() || Settings.Secure.getInt(getContentResolver(),
                 Settings.Secure.SKIP_FIRST_USE_HINTS, 0) == 1) {
             return false;
         }
         return true;
+    }
+
+    private boolean isBox() {
+        Class c = null;
+        boolean isbox = false;
+        try{
+            c = Class.forName("android.os.SystemProperties");
+            Method method = c.getMethod("getBoolean", new  Class[] {String.class, boolean.class});
+            if ( method != null ) {
+                isbox = (boolean) method.invoke(c, new Object[]{"ro.platform.has.mbxuimode",false});
+            }
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        return isbox;
     }
 
     private Cling initCling(int clingId, int[] positionData, boolean animate, int delay) {
